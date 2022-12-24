@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.lerabytes.olxmonitor">
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+
+    <application
+        android:process=":olxmonitor"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        android:fullBackupContent="@xml/backup_descriptor"
+        android:largeHeap="true">
+        <activity android:name="com.lerabytes.olxmonitor.activities.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="com.lerabytes.olxmonitor.activities.AddItemActivity"
+            android:parentActivityName="com.lerabytes.olxmonitor.activities.MainActivity">
+        </activity>
+        <activity android:name="com.lerabytes.olxmonitor.activities.OffersActivity"
+            android:parentActivityName="com.lerabytes.olxmonitor.activities.MainActivity">
+        </activity>
+        <service android:name="com.lerabytes.olxmonitor.services.MonitorOffersService">
+        </service>
+<!--        <receiver android:name=".activities.MainActivity$ReceiverCheckOffersService"  android:exported="true">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="com.lerabytes.broadcast.TEST"/>-->
+<!--            </intent-filter>-->
+<!--        </receiver>-->
+    </application>
+
+</manifest>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="itemtype_array">
+        <item>@string/additem_link</item>
+        <item>@string/additem_title</item>
+    </string-array>
+
+    <string-array name="service_array">
+        <item>olx.pl</item>
+        <item>olx.bg</item>
+        <item>olx.pt</item>
+        <item>olx.ro</item>
+    </string-array>
+</resources>

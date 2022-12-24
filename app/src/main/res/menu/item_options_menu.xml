@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/itemOptionsDelete"
+        android:title="@string/itemoptions_delete" />
+    <item
+        android:id="@+id/itemOptionsCopyURL"
+        android:title="@string/itemoptions_copy_url" />
+    <item
+        android:id="@+id/itemOptionsGoToURL"
+        android:title="@string/itemoptions_open_url" />
+</menu>

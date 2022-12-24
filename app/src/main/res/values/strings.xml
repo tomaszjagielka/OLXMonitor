@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="app_name">OLX Monitor</string>
+    <string name="additem_add">Add</string>
+    <string name="additem_title">Title</string>
+    <string name="additem_link">Link</string>
+    <string name="additem_name">Name</string>
+    <string name="additem_item_type">Item type</string>
+    <string name="additem_hyperlink_example">e.g. https://www.olx.pl/oferty/q-item/</string>
+    <string name="additem_service">Service</string>
+    <string name="additem_add_new_item">Add new item</string>
+    <string name="itemoptions_delete">Delete</string>
+    <string name="itemoptions_copy_url">Copy link</string>
+    <string name="itemoptions_open_url">Open link</string>
+    <string name="additem_nametitle_example">e.g. Book</string>
+    <string name="first_url_part">https://www.olx.pl/oferty/q-</string>
+    <string name="contentdescription_refresh_offers">Refresh offers</string>
+    <string name="contentdescription_item_options">Item options</string>
+    <string name="contentdescription_offer_image">Offer image</string>
+</resources>

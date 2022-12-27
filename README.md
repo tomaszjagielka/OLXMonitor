@@ -6,7 +6,7 @@ An Android app that notifies their users as soon as new OLX offers are posted. I
 
 <p align="center">
   <a href="https://www.android.com/"><img src="https://img.shields.io/badge/%20-Android-forestgreen?logo=android&logoColor=white" alt="Android"></a>
-  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/%20-Kotlin-%237F52FF?logo=kotlin&logoColor=white" alt="Kotlin"></a>
+  <a href="https://kotlinlang.org/"><img src="https://img.shields.io/badge/%20-Kotlin-%237F52FF?logo=kotlin&logoColor=white" alt="Kotlin"></a>
 </p>
 
 <p>
@@ -14,7 +14,7 @@ An Android app that notifies their users as soon as new OLX offers are posted. I
 </p><br><br>
 
 ## Features
-* Allows to track any item using title or URL.
+* Allows to track any item by its title or URL.
 * Notifies as soon as there's a new OLX offer posted.
 * Allows to browse the offers.
 * Responsive layout (works well on any screen).
@@ -39,6 +39,11 @@ Google Play version soon!
 1. Launch the app.
 2. Add desired items to the tracking list by title or OLX URL (e.g. https://www.olx.pl/d/oferty/q-shoes/).
 3. As soon as there are new offers, you will be notified!
+
+## How it works?
+1. It tracks items that the user added to the home screen view via URL or item title.
+2. To track items, the app uses service to scrape the OLX website. If a new offer for a tracked item is detected, it creates a new notification and passes the offer data to the offer browser fragment.
+3. The offer browser fragment uses `RecyclerView` with a `StaggeredGridLayoutManager` to display offers.
 
 ## Home screen view
 <img src="https://user-images.githubusercontent.com/54605544/201765839-907c6913-eff5-41a8-ac6c-3cc59b5bc316.png" width="300">

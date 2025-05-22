@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.RecyclerView
 import com.lerabytes.olxmonitor.R
+import com.lerabytes.olxmonitor.activities.OffersActivity
 import com.lerabytes.olxmonitor.adapters.ItemsAdapter
 import com.lerabytes.olxmonitor.models.Item
 import com.lerabytes.olxmonitor.models.ItemLink
@@ -38,7 +39,7 @@ var serviceIntent: Intent? = null
 var monitorOffersService: MonitorOffersService? = null
 var itemsRecyclerView: RecyclerView? = null
 
-class ItemsFragment : Fragment() {
+class ItemsFragment : Fragment(), ItemsAdapter.ItemClickListener {
     private val sTag = "ItemsFragment"
     private var adapter: ItemsAdapter? = null
 
@@ -56,6 +57,7 @@ class ItemsFragment : Fragment() {
         recyclerView.setHasFixedSize(true)
         recyclerView.adapter = addExampleItems(itemsFragment, recyclerView)
         adapter = recyclerView.adapter as ItemsAdapter
+        adapter?.setClickListener(this)
 
         // Disable notifyItemChanged animation.
         recyclerView.itemAnimator = null
@@ -185,5 +187,22 @@ class ItemsFragment : Fragment() {
         val context = itemsRecyclerView?.context as AppCompatActivity
         itemsFragmentImportant.remove(itemsFragment[i])
         context.runOnUiThread { itemsRecyclerView?.adapter?.notifyItemChanged(i) }
+    }
+
+    override fun onClick(view: View, position: Int, isLongClick: Boolean) {
+        if (position < 0 || position >= itemsFragment.size) {
+            Log.e(sTag, "Invalid position: $position")
+            return
+        }
+
+        shownIndex = position
+
+        if (isDualPane) {
+            val offersFragment = OffersFragment()
+            offersFragment.showDualPaneOffers(activity)
+        } else {
+            val intent = Intent(activity, OffersActivity::class.java)
+            startActivity(intent)
+        }
     }
 }

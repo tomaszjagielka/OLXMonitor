@@ -18,7 +18,6 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
-import com.chootdev.recycleclick.RecycleClick
 import com.lerabytes.olxmonitor.R
 import com.lerabytes.olxmonitor.activities.OffersActivity
 import com.lerabytes.olxmonitor.enums.ItemViewTypes
@@ -28,44 +27,25 @@ import com.lerabytes.olxmonitor.models.ItemLink
 import com.lerabytes.olxmonitor.models.ItemTitle
 import java.util.*
 
-
 class ItemsAdapter(
     private val items: ArrayList<Item>,
     private val itemsImportant: ArrayList<Item>,
     private val recyclerView: RecyclerView
 ) :
-    RecyclerView.Adapter<ViewHolder>() {
+    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val sTag = "ItemsAdapter"
 
+    private var clickListener: ItemClickListener? = null
+
+    fun setClickListener(itemClickListener: ItemClickListener) {
+        this.clickListener = itemClickListener
+    }
+
+    interface ItemClickListener {
+        fun onClick(view: View, position: Int, isLongClick: Boolean)
+    }
+
     init {
-        fun setRecyclerClickListener() {
-            RecycleClick.addTo(recyclerView)
-                .setOnItemClickListener { recyclerView, position, v ->
-                    fun recyclerItemClicked(
-                        position: Int
-                    ) {
-                        if (isDualPane) {
-                            val context = recyclerView.context as AppCompatActivity
-                            OffersFragment().showDualPaneOffers(context)
-                                .apply { shownIndex = position }
-                        } else {
-                            recyclerView.context.startActivity(
-                                Intent(
-                                    recyclerView.context,
-                                    OffersActivity::class.java
-                                ).apply {
-                                    shownIndex = position
-                                }
-                            )
-                        }
-
-                        ItemsFragment().removeItemImportant(position)
-                    }
-
-                    recyclerItemClicked(position)
-                }
-        }
-
         fun setDragAndDrop() {
             val ithCallback: ItemTouchHelper.Callback = object : ItemTouchHelper.Callback() {
 
@@ -121,7 +101,6 @@ class ItemsAdapter(
             recyclerView.addItemDecoration(itemDecoration)
         }
 
-        setRecyclerClickListener()
         setDragAndDrop()
         setDivider()
     }
@@ -135,7 +114,8 @@ class ItemsAdapter(
                         R.layout.item_container_title,
                         parent,
                         false
-                    )
+                    ),
+                    clickListener
                 )
 
                 itemTitleViewHolder.setOptionsClickListener(
@@ -152,7 +132,8 @@ class ItemsAdapter(
                         R.layout.item_container_link,
                         parent,
                         false
-                    )
+                    ),
+                    clickListener
                 )
 
                 itemLinkViewHolder.setOptionsClickListener(
@@ -189,13 +170,21 @@ class ItemsAdapter(
 
     // VIEWHOLDERS.
 
-    private class ItemTitleViewHolder(itemView: View) :
-        ViewHolder(itemView) {
+    private class ItemTitleViewHolder(itemView: View, private val clickListener: ItemClickListener?) :
+        ViewHolder(itemView), View.OnClickListener {
 
         private val textItemTitle: TextView = itemView.findViewById(R.id.textItemTitle)
 
         private val ibOptions: ImageButton =
             itemView.findViewById(R.id.ibOptions)
+
+        init {
+            itemView.setOnClickListener(this)
+        }
+
+        override fun onClick(v: View) {
+            clickListener?.onClick(v, adapterPosition, false)
+        }
 
         fun setData(itemTitle: ItemTitle) {
             textItemTitle.text = itemTitle.itemTitle
@@ -221,13 +210,21 @@ class ItemsAdapter(
         }
     }
 
-    private class ItemLinkViewHolder(itemView: View) :
-        ViewHolder(itemView) {
+    private class ItemLinkViewHolder(itemView: View, private val clickListener: ItemClickListener?) :
+        ViewHolder(itemView), View.OnClickListener {
 
         private val textItemName: TextView = itemView.findViewById(R.id.textItemName)
         private val textItemLink: TextView = itemView.findViewById(R.id.textItemLink)
         private val ibOptions: ImageButton =
             itemView.findViewById(R.id.ibOptions)
+
+        init {
+            itemView.setOnClickListener(this)
+        }
+
+        override fun onClick(v: View) {
+            clickListener?.onClick(v, adapterPosition, false)
+        }
 
         fun setData(itemLink: ItemLink) {
             textItemName.text = itemLink.itemName

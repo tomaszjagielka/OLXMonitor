@@ -1,7 +1,10 @@
 package com.lerabytes.olxmonitor.fragments
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +15,12 @@ import com.lerabytes.olxmonitor.R
 import com.lerabytes.olxmonitor.adapters.OffersAdapter
 import com.lerabytes.olxmonitor.adapters.offersLastPageIndex
 import com.lerabytes.olxmonitor.adapters.offersPageIndex
+import com.lerabytes.olxmonitor.adapters.getHTML
+import com.lerabytes.olxmonitor.adapters.getOffers
+import com.lerabytes.olxmonitor.enums.OfferViewTypes
 import com.lerabytes.olxmonitor.models.*
+import com.lerabytes.olxmonitor.adapters.OffersAdapter.ItemClickListener
+import kotlin.concurrent.thread
 
 
 // These can't be inside class, because they will reset on each object created.
@@ -20,7 +28,7 @@ var offersFragment = ArrayList<Item>()
 var offersFragmentTemp = ArrayList<Item>()
 private var oldPosition = 0
 
-class OffersFragment : Fragment() {
+class OffersFragment : Fragment(), ItemClickListener {
     private val sTag = "OffersFragment"
 
     override fun onCreateView(
@@ -28,22 +36,33 @@ class OffersFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
         val inflaterView = inflater.inflate(R.layout.fragment_offers, container, false)
         val recyclerView = inflaterView.findViewById<RecyclerView>(R.id.recyclerOffers)
+        
+        recyclerView.isClickable = true
+        recyclerView.isFocusable = true
+        
         val layoutManager = StaggeredGridLayoutManager(
             calculateNoOfColumns(150),
             StaggeredGridLayoutManager.VERTICAL
         )
 
         recyclerView.layoutManager = layoutManager
-        recyclerView.adapter = addRealItems(recyclerView, layoutManager)
+        val adapter = addRealItems(recyclerView, layoutManager)
+        
+        adapter.setClickListener(this)
+        
+        recyclerView.adapter = adapter
+        
+        adapter.logItems()
 
         recyclerView.setHasFixedSize(true)
 
-        // Title can't be seen in Dual Pane mode.
-        // Title for some reason changes when coming back from dual pane mode to Main Activity.
-//        if (!isDualPane && shownIndex != -1) setTitle()
+        recyclerView.setOnClickListener { 
+            Log.d(sTag, "RecyclerView clicked directly")
+        }
+
+        Log.d(sTag, "RecyclerView setup complete, items count: ${offersFragment.size}")
 
         return inflaterView
     }
@@ -64,7 +83,7 @@ class OffersFragment : Fragment() {
     private fun calculateNoOfColumns(itemWidth: Int): Int {
         val displayMetrics: DisplayMetrics = resources.displayMetrics
         var dpWidth = displayMetrics.widthPixels / displayMetrics.density
-
+        
         if (isDualPane) {
             // Get dp width of Offers fragment by subtracting dp width of Items fragment.
             // Need to hardcode it, because fragments are not yet initialized.
@@ -73,17 +92,18 @@ class OffersFragment : Fragment() {
 
         var result: Int = (dpWidth / itemWidth).toInt()
         if (result == 0) result = 1
-
+        
         return result
     }
 
     private fun addRealItems(
         recyclerView: RecyclerView,
         layoutManager: StaggeredGridLayoutManager
-    ): OffersAdapter {
+    ): OffersAdapter {       
         if (shownIndex == -1) shownIndex = 0
 
         if (shownIndex < itemsContent.size) {
+              
             if (shownIndex != oldPosition) {
                 offersPageIndex = 2
                 offersLastPageIndex = 25
@@ -95,19 +115,44 @@ class OffersFragment : Fragment() {
 
                 if (itemsFragment[shownIndex] in itemsFragmentImportant) {
                     itemsFragmentImportant.remove(itemsFragment[shownIndex])
-                    // It probably doesn't work.
-//                    activity?.runOnUiThread {
-//                        itemsRecyclerView?.adapter?.notifyItemChanged(
-//                            shownIndex
-//                        )
-//                    }
+                }
+            } else if (offersFragment.isEmpty()) {
+                val tempAdapter = OffersAdapter(offersFragment, recyclerView, layoutManager, this)
+                
+                activity?.let { context ->
+                    thread {
+                        val offers = getOffers(
+                            getHTML(
+                                shownIndex,
+                                context.getString(R.string.first_url_part)
+                            )
+                        )
+                        
+                        Log.d(sTag, "Loaded ${offers.size} offers")
+                        
+                        if (itemsContent.size > shownIndex) {
+                            Log.d(sTag, "Adding offers to itemsContent[$shownIndex]")
+                            itemsContent[shownIndex].addAll(offers)
+                        }
+                        
+                        offersFragment.addAll(offers)
+                        
+                        context.runOnUiThread { 
+                            Log.d(sTag, "Notifying adapter of new items")
+                            recyclerView.adapter?.notifyItemRangeChanged(0, offers.size) 
+                        }
+                    }
                 }
             }
 
             oldPosition = shownIndex
+        } else {
+            Log.e(sTag, "shownIndex ($shownIndex) out of bounds for itemsContent (size: ${itemsContent.size})")
         }
 
-        return OffersAdapter(offersFragment, recyclerView, layoutManager)
+        val adapter = OffersAdapter(offersFragment, recyclerView, layoutManager, this)
+        Log.d(sTag, "Created adapter with ${offersFragment.size} items")
+        return adapter
     }
 
 //    private fun addExampleItems(
@@ -197,5 +242,33 @@ class OffersFragment : Fragment() {
         val fragmentOffers: OffersFragment = OffersFragment().newInstance()
         ft?.replace(R.id.frameOffers, fragmentOffers)
         ft?.commit()
+    }
+
+    override fun onClick(view: View, position: Int, isLongClick: Boolean) {
+        if (isLongClick) {
+            return
+        }
+        
+        if (position < offersFragment.size) {
+            try {
+                val url = when (offersFragment[position].type) {
+                    OfferViewTypes.OfferText.ordinal -> {
+                        val offerText = offersFragment[position].`object` as OfferText
+                        offerText.offerUrl
+                    }
+                    else -> {
+                        val offerImage = offersFragment[position].`object` as OfferImage
+                        offerImage.offerUrl
+                    }
+                }
+                
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                startActivity(intent)
+            } catch (e: Exception) {
+                Log.e(sTag, "Error opening URL for position $position", e)
+            }
+        } else {
+            Log.e(sTag, "Invalid position: $position, offersFragment size: ${offersFragment.size}")
+        }
     }
 }

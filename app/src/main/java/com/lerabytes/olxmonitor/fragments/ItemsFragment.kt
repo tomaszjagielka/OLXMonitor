@@ -13,7 +13,9 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import com.lerabytes.olxmonitor.R
 import com.lerabytes.olxmonitor.activities.OffersActivity
 import com.lerabytes.olxmonitor.adapters.ItemsAdapter
@@ -58,6 +60,8 @@ class ItemsFragment : Fragment(), ItemsAdapter.ItemClickListener {
         recyclerView.adapter = addExampleItems(itemsFragment, recyclerView)
         adapter = recyclerView.adapter as ItemsAdapter
         adapter?.setClickListener(this)
+        
+        setupSwipeToDelete(recyclerView)
 
         // Disable notifyItemChanged animation.
         recyclerView.itemAnimator = null
@@ -84,6 +88,14 @@ class ItemsFragment : Fragment(), ItemsAdapter.ItemClickListener {
                             sleep(1)
                         }
                         break
+                    }
+                }
+
+                shownIndex = 0
+                
+                if (itemsFragment.isNotEmpty() && itemsFragment[0] in itemsFragmentImportant) {
+                    activity?.runOnUiThread {
+                        removeItemImportant(0)
                     }
                 }
 
@@ -176,7 +188,7 @@ class ItemsFragment : Fragment(), ItemsAdapter.ItemClickListener {
     }
 
     fun setItemImportant(i: Int) {
-        if (itemsFragment[i] !in itemsFragmentImportant && (shownIndex != i || !isDualPane)) {
+        if (itemsFragment[i] !in itemsFragmentImportant) {
             val context = itemsRecyclerView?.context as AppCompatActivity
             itemsFragmentImportant.add(itemsFragment[i])
             context.runOnUiThread { itemsRecyclerView?.adapter?.notifyItemChanged(i) }
@@ -197,6 +209,10 @@ class ItemsFragment : Fragment(), ItemsAdapter.ItemClickListener {
 
         shownIndex = position
 
+        if (itemsFragment[position] in itemsFragmentImportant) {
+            removeItemImportant(position)
+        }
+
         if (isDualPane) {
             val offersFragment = OffersFragment()
             offersFragment.showDualPaneOffers(activity)
@@ -204,5 +220,47 @@ class ItemsFragment : Fragment(), ItemsAdapter.ItemClickListener {
             val intent = Intent(activity, OffersActivity::class.java)
             startActivity(intent)
         }
+    }
+
+    private fun setupSwipeToDelete(recyclerView: RecyclerView) {
+        val itemTouchHelperCallback = object : ItemTouchHelper.SimpleCallback(
+            0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+        ) {
+            override fun onMove(
+                recyclerView: RecyclerView, 
+                viewHolder: RecyclerView.ViewHolder, 
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.adapterPosition
+                val removedItem = itemsFragment[position]
+                
+                itemsFragment.removeAt(position)
+                itemsFragmentImportant.remove(removedItem)
+                adapter?.notifyItemRemoved(position)
+                
+                view?.let {
+                    val snackbar = Snackbar.make(
+                        it,
+                        getString(R.string.gesture_item_removed),
+                        Snackbar.LENGTH_LONG
+                    )
+                    snackbar.setAction(getString(R.string.gesture_undo)) {
+                        itemsFragment.add(position, removedItem)
+                        if (removedItem in itemsFragmentImportant) {
+                            itemsFragmentImportant.add(removedItem)
+                        }
+                        adapter?.notifyItemInserted(position)
+                    }
+                    snackbar.show()
+                }
+            }
+        }
+        
+        val itemTouchHelper = ItemTouchHelper(itemTouchHelperCallback)
+        itemTouchHelper.attachToRecyclerView(recyclerView)
     }
 }

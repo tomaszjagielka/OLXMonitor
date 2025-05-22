@@ -17,4 +17,10 @@
     <string name="contentdescription_refresh_offers">Refresh offers</string>
     <string name="contentdescription_item_options">Item options</string>
     <string name="contentdescription_offer_image">Offer image</string>
+    <string name="gesture_item_removed">Item removed</string>
+    <string name="gesture_undo">UNDO</string>
+    <string name="gesture_item_marked_important">Item marked as important</string>
+    <string name="gesture_item_marked_normal">Item marked as normal</string>
+    <string name="gesture_swipe_right">Right swipe detected</string>
+    <string name="gesture_swipe_left">Left swipe detected</string>
 </resources>
